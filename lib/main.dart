@@ -13,103 +13,153 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyCalendar(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class MyCalendar extends StatefulWidget {
+  const MyCalendar({Key? key}) : super(key: key);
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  _MyCalendarState createState() => _MyCalendarState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+extension _IntExs on int {
+  String toWeek() {
+    switch (this) {
+      case DateTime.monday:
+        return '月';
+      case DateTime.tuesday:
+        return '火';
+      case DateTime.wednesday:
+        return '水';
+      case DateTime.thursday:
+        return '木';
+      case DateTime.friday:
+        return '金';
+      case DateTime.saturday:
+        return '土';
+      case DateTime.sunday:
+        return '日';
+      default:
+        return '';
+    }
+  }
+}
 
-  void _incrementCounter() {
+class _MyCalendarState extends State<MyCalendar> {
+  var calendars = <List<DateTime>>[];
+
+  static const gray = Color.fromRGBO(130, 136, 157, 1);
+
+  /// 開始日と終了日までのカレンダーデータを生成する
+  List<List<DateTime>> generateCalendar({required DateTime startDay, required DateTime endDay}) {
+    assert(startDay.compareTo(endDay) == -1);
+    final calendars = <List<DateTime>>[];
+
+    var index = 0;
+    var month = <DateTime>[];
+    while (startDay.add(Duration(days: index)).compareTo(endDay) == -1) {
+      month.add(startDay.add(Duration(days: index)));
+      index++;
+      // 月が異なった場合、今までのデータを一度カレンダーに格納し、monthを初期化する
+      if (month.last.month != startDay.add(Duration(days: index)).month) {
+        calendars.add(month);
+        month = <DateTime>[];
+      }
+    }
+
+    return calendars;
+  }
+
+  @override
+  void initState() {
+    super.initState();
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      calendars = generateCalendar(startDay: DateTime(2020), endDay: DateTime(2021));
     });
+
+    print(calendars);
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    const cellWidth = 20.0;
     return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
-          ],
+      body: SafeArea(
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            mainAxisSize: MainAxisSize.max,
+            children: calendars.map((calendar) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: calendar.length * cellWidth,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      border: Border(
+                        top: const BorderSide(color: gray, width: .5),
+                        right: BorderSide(color: gray.withOpacity(.2), width: .5),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const SizedBox(width: 4),
+                        Text(
+                          '${calendar.first.year}年${calendar.first.month}月',
+                          style: const TextStyle(
+                            color: Color.fromRGBO(0, 19, 80, 1),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Row(
+                    children: calendar.map(
+                      (e) {
+                        return Container(
+                          width: cellWidth,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            border: Border.symmetric(
+                              horizontal: const BorderSide(color: gray, width: .5),
+                              vertical: BorderSide(color: gray.withOpacity(.2), width: .5),
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                '${e.day}',
+                                style: const TextStyle(fontSize: 12, color: gray),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                e.weekday.toWeek(),
+                                style: const TextStyle(fontSize: 10, color: gray),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ).toList(),
+                  ),
+                ],
+              );
+            }).toList(),
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
+        onPressed: () {},
         child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
     );
   }
 }
