@@ -54,10 +54,14 @@ extension _IntExs on int {
 class _MyCalendarState extends State<MyCalendar> {
   var calendars = <List<DateTime>>[];
 
-  final LinkedScrollControllerGroup _controllers = LinkedScrollControllerGroup();
+  final LinkedScrollControllerGroup _verticalControllers = LinkedScrollControllerGroup();
+  final LinkedScrollControllerGroup _horizontalControllers = LinkedScrollControllerGroup();
 
   late ScrollController verticalController1;
   late ScrollController verticalController2;
+
+  late ScrollController horizontalController1;
+  late ScrollController horizontalController2;
 
   static const gray = Color.fromRGBO(130, 136, 157, 1);
 
@@ -87,14 +91,19 @@ class _MyCalendarState extends State<MyCalendar> {
     setState(() {
       calendars = generateCalendar(startDay: DateTime(2020), endDay: DateTime(2021));
     });
-    verticalController1 = _controllers.addAndGet();
-    verticalController2 = _controllers.addAndGet();
+    verticalController1 = _verticalControllers.addAndGet();
+    verticalController2 = _verticalControllers.addAndGet();
+
+    horizontalController1 = _horizontalControllers.addAndGet();
+    horizontalController2 = _horizontalControllers.addAndGet();
   }
 
   @override
   void dispose() {
     verticalController1.dispose();
     verticalController2.dispose();
+    horizontalController1.dispose();
+    horizontalController2.dispose();
     super.dispose();
   }
 
@@ -207,96 +216,10 @@ class _MyCalendarState extends State<MyCalendar> {
                 children: [
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
+                    controller: horizontalController1,
                     child: Column(
                       children: [
-                        /// 月日表示
-                        Row(
-                          mainAxisSize: MainAxisSize.max,
-                          children: calendars.map((calendar) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                /// 月表示
-                                Container(
-                                  width: calendar.length * cellWidth,
-                                  height: 24,
-                                  decoration: BoxDecoration(
-                                    border: Border(
-                                      top: const BorderSide(color: gray, width: .5),
-                                      right: BorderSide(color: gray.withOpacity(.2), width: .5),
-                                    ),
-                                    color: Theme.of(context).scaffoldBackgroundColor,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '${calendar.first.year}年${calendar.first.month}月',
-                                        style: const TextStyle(
-                                          color: Color.fromRGBO(0, 19, 80, 1),
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-
-                                /// 日付
-                                Row(
-                                  children: [
-                                    ...calendar.map(
-                                      (date) {
-                                        return Row(
-                                          children: [
-                                            Stack(
-                                              children: [
-                                                Container(
-                                                  width: cellWidth,
-                                                  height: 40,
-                                                  decoration: BoxDecoration(
-                                                    border: Border(
-                                                      top: const BorderSide(color: gray, width: .5),
-                                                      bottom: const BorderSide(color: gray, width: .5),
-                                                      left: BorderSide(color: gray.withOpacity(.5), width: .5),
-                                                    ),
-                                                    color: Theme.of(context).scaffoldBackgroundColor,
-                                                  ),
-                                                  child: Column(
-                                                    mainAxisAlignment: MainAxisAlignment.center,
-                                                    children: [
-                                                      Text(
-                                                        '${date.day}',
-                                                        style: const TextStyle(fontSize: 12, color: gray),
-                                                      ),
-                                                      const SizedBox(height: 4),
-                                                      Text(
-                                                        date.weekday.toWeek(),
-                                                        style: const TextStyle(fontSize: 10, color: gray),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                if (date.day == 1)
-                                                  SizedBox(
-                                                    height: 40,
-                                                    width: 0,
-                                                    child: DottedLine(
-                                                      direction: Axis.vertical,
-                                                    ),
-                                                  ),
-                                              ],
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    ).toList(),
-                                  ],
-                                ),
-                              ],
-                            );
-                          }).toList(),
-                        ),
-
+                        const SizedBox(height: 64),
                         Expanded(
                           child: SingleChildScrollView(
                             controller: verticalController1,
@@ -374,16 +297,128 @@ class _MyCalendarState extends State<MyCalendar> {
                               width: 400,
                               height: 36,
                               decoration: BoxDecoration(
-                                color: Colors.grey,
+                                color: Color.fromRGBO(249, 250, 252, 1),
                                 border: Border(
                                   top: const BorderSide(color: gray, width: .5),
                                   bottom: const BorderSide(color: gray, width: .5),
                                 ),
                               ),
-                              child: Text('足場工事'),
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Row(
+                                  children: [
+                                    SizedBox(width: 16),
+                                    Text(
+                                      '足場工事',
+                                      style: const TextStyle(
+                                        color: Color.fromRGBO(0, 19, 80, 1),
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ],
                         ),
+                      ),
+                    ),
+                  ),
+                  IgnorePointer(
+                    ignoring: true,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      controller: horizontalController2,
+                      child: Column(
+                        children: [
+                          /// 月日表示
+                          Row(
+                            mainAxisSize: MainAxisSize.max,
+                            children: calendars.map((calendar) {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  /// 月表示
+                                  Container(
+                                    width: calendar.length * cellWidth,
+                                    height: 24,
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        top: const BorderSide(color: gray, width: .5),
+                                        right: BorderSide(color: gray.withOpacity(.2), width: .5),
+                                      ),
+                                      color: Theme.of(context).scaffoldBackgroundColor,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          '${calendar.first.year}年${calendar.first.month}月',
+                                          style: const TextStyle(
+                                            color: Color.fromRGBO(0, 19, 80, 1),
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  /// 日付
+                                  Row(
+                                    children: [
+                                      ...calendar.map(
+                                        (date) {
+                                          return Row(
+                                            children: [
+                                              Stack(
+                                                children: [
+                                                  Container(
+                                                    width: cellWidth,
+                                                    height: 40,
+                                                    decoration: BoxDecoration(
+                                                      border: Border(
+                                                        top: const BorderSide(color: gray, width: .5),
+                                                        bottom: const BorderSide(color: gray, width: .5),
+                                                        left: BorderSide(color: gray.withOpacity(.5), width: .5),
+                                                      ),
+                                                      color: Theme.of(context).scaffoldBackgroundColor,
+                                                    ),
+                                                    child: Column(
+                                                      mainAxisAlignment: MainAxisAlignment.center,
+                                                      children: [
+                                                        Text(
+                                                          '${date.day}',
+                                                          style: const TextStyle(fontSize: 12, color: gray),
+                                                        ),
+                                                        const SizedBox(height: 4),
+                                                        Text(
+                                                          date.weekday.toWeek(),
+                                                          style: const TextStyle(fontSize: 10, color: gray),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  if (date.day == 1)
+                                                    SizedBox(
+                                                      height: 40,
+                                                      width: 0,
+                                                      child: DottedLine(
+                                                        direction: Axis.vertical,
+                                                      ),
+                                                    ),
+                                                ],
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      ).toList(),
+                                    ],
+                                  ),
+                                ],
+                              );
+                            }).toList(),
+                          ),
+                        ],
                       ),
                     ),
                   ),
