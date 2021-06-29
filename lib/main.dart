@@ -29,7 +29,7 @@ class MyCalendar extends StatefulWidget {
 }
 
 extension _IntExs on int {
-  String toWeek() {
+  String toDayOfTheWeek() {
     switch (this) {
       case DateTime.monday:
         return '月';
@@ -52,7 +52,7 @@ extension _IntExs on int {
 }
 
 class _MyCalendarState extends State<MyCalendar> {
-  var calendars = <List<DateTime>>[];
+  var months = <List<DateTime>>[];
 
   final LinkedScrollControllerGroup _verticalControllers = LinkedScrollControllerGroup();
   final LinkedScrollControllerGroup _horizontalControllers = LinkedScrollControllerGroup();
@@ -64,11 +64,14 @@ class _MyCalendarState extends State<MyCalendar> {
   late ScrollController horizontalController2;
 
   static const gray = Color.fromRGBO(130, 136, 157, 1);
+  static const defaultTextColor = Color.fromRGBO(0, 19, 80, 1);
+
+  double calenderHeight = 800;
 
   /// 開始日と終了日までのカレンダーデータを生成する
   List<List<DateTime>> generateCalendar({required DateTime startDay, required DateTime endDay}) {
     assert(startDay.compareTo(endDay) == -1);
-    final calendars = <List<DateTime>>[];
+    final months = <List<DateTime>>[];
 
     var index = 0;
     var month = <DateTime>[];
@@ -77,19 +80,19 @@ class _MyCalendarState extends State<MyCalendar> {
       index++;
       // 月が異なった場合、今までのデータを一度カレンダーに格納し、monthを初期化する
       if (month.last.month != startDay.add(Duration(days: index)).month) {
-        calendars.add(month);
+        months.add(month);
         month = <DateTime>[];
       }
     }
 
-    return calendars;
+    return months;
   }
 
   @override
   void initState() {
     super.initState();
     setState(() {
-      calendars = generateCalendar(startDay: DateTime(2020), endDay: DateTime(2021));
+      months = generateCalendar(startDay: DateTime(2020), endDay: DateTime(2021));
     });
     verticalController1 = _verticalControllers.addAndGet();
     verticalController2 = _verticalControllers.addAndGet();
@@ -110,6 +113,10 @@ class _MyCalendarState extends State<MyCalendar> {
   @override
   Widget build(BuildContext context) {
     const cellWidth = 20.0;
+
+    const tabTextStyle = TextStyle(
+      color: defaultTextColor,
+    );
     return DefaultTabController(
       length: 3,
       child: Scaffold(
@@ -118,7 +125,7 @@ class _MyCalendarState extends State<MyCalendar> {
           title: const Text(
             '新築仕上げ大工事！',
             style: TextStyle(
-              color: Color.fromRGBO(0, 19, 80, 1),
+              color: defaultTextColor,
               fontWeight: FontWeight.bold,
               fontSize: 16,
             ),
@@ -142,7 +149,7 @@ class _MyCalendarState extends State<MyCalendar> {
           elevation: 1,
           // 参考: https://stackoverflow.com/questions/64453159/how-to-use-a-tabbar-in-a-row-flutter
           bottom: PreferredSize(
-            preferredSize: Size.fromHeight(40),
+            preferredSize: const Size.fromHeight(40),
             child: ListView(
               shrinkWrap: true,
               children: [
@@ -152,30 +159,9 @@ class _MyCalendarState extends State<MyCalendar> {
                       flex: 4,
                       child: TabBar(
                         tabs: [
-                          Tab(
-                            child: Text(
-                              '表',
-                              style: TextStyle(
-                                color: Color.fromRGBO(0, 19, 80, 1),
-                              ),
-                            ),
-                          ),
-                          Tab(
-                            child: Text(
-                              'リスト',
-                              style: TextStyle(
-                                color: Color.fromRGBO(0, 19, 80, 1),
-                              ),
-                            ),
-                          ),
-                          Tab(
-                            child: Text(
-                              '予定',
-                              style: TextStyle(
-                                color: Color.fromRGBO(0, 19, 80, 1),
-                              ),
-                            ),
-                          ),
+                          Tab(child: Text('表', style: tabTextStyle)),
+                          Tab(child: Text('リスト', style: tabTextStyle)),
+                          Tab(child: Text('予定', style: tabTextStyle)),
                         ],
                       ),
                     ),
@@ -226,46 +212,72 @@ class _MyCalendarState extends State<MyCalendar> {
                             physics: const AlwaysScrollableScrollPhysics(),
                             child: Row(
                               mainAxisSize: MainAxisSize.max,
-                              children: calendars.map((calendar) {
+                              children: months.map((month) {
                                 return Column(
                                   children: [
                                     Row(
-                                      children: calendar.map(
+                                      children: month.map(
                                         (date) {
                                           return Row(
                                             children: [
-                                              if (date.day == 1)
+                                              if (date.day == 5)
+                                                // 工期の破線
                                                 SizedBox(
-                                                  height: 800,
+                                                  height: calenderHeight,
                                                   width: 0,
-                                                  child: DottedLine(
-                                                    direction: Axis.vertical,
-                                                  ),
+                                                  child: DottedLine(direction: Axis.vertical),
                                                 ),
                                               Container(
                                                 width: cellWidth,
-                                                height: 800,
+                                                height: calenderHeight,
                                                 decoration: BoxDecoration(
                                                   border: Border(
-                                                    left: BorderSide(color: gray.withOpacity(.5), width: .5),
+                                                    left: date.day != 5
+                                                        ? BorderSide(color: gray.withOpacity(.5), width: .5)
+                                                        : BorderSide.none,
                                                   ),
                                                 ),
                                                 child: Column(
                                                   mainAxisAlignment: MainAxisAlignment.start,
                                                   children: [
-                                                    SizedBox(
-                                                      height: 32,
-                                                      child: Stack(
-                                                        alignment: Alignment.center,
-                                                        children: [
-                                                          Container(
-                                                            height: 8,
-                                                            width: 8,
-                                                            color: Colors.amber,
-                                                          ),
-                                                        ],
+                                                    if (date.day == 5)
+                                                      SizedBox(
+                                                        height: 32,
+                                                        child: Stack(
+                                                          alignment: Alignment.center,
+                                                          children: [
+                                                            OverflowBox(
+                                                              alignment: Alignment.centerLeft,
+                                                              maxHeight: 16,
+                                                              maxWidth: 32 * 3,
+                                                              child: Row(
+                                                                mainAxisAlignment: MainAxisAlignment.start,
+                                                                children: const [
+                                                                  SizedBox(width: 6),
+                                                                  Material(
+                                                                    shape: BeveledRectangleBorder(
+                                                                      borderRadius: BorderRadius.only(
+                                                                        topRight: Radius.circular(2),
+                                                                        bottomRight: Radius.circular(2),
+                                                                      ),
+                                                                    ),
+                                                                    color: Colors.amber,
+                                                                    child: SizedBox(height: 6, width: 8),
+                                                                  ),
+                                                                  SizedBox(width: 5),
+                                                                  FittedBox(
+                                                                    fit: BoxFit.fitHeight,
+                                                                    child: Text(
+                                                                      '着工日',
+                                                                      style: TextStyle(color: defaultTextColor),
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
                                                       ),
-                                                    ),
                                                   ],
                                                 ),
                                               ),
@@ -289,7 +301,7 @@ class _MyCalendarState extends State<MyCalendar> {
                       controller: verticalController2,
                       physics: const AlwaysScrollableScrollPhysics(),
                       child: SizedBox(
-                        height: 800,
+                        height: calenderHeight,
                         child: Column(
                           children: [
                             SizedBox(height: 64 + 32),
@@ -311,7 +323,7 @@ class _MyCalendarState extends State<MyCalendar> {
                                     Text(
                                       '足場工事',
                                       style: const TextStyle(
-                                        color: Color.fromRGBO(0, 19, 80, 1),
+                                        color: defaultTextColor,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -334,13 +346,13 @@ class _MyCalendarState extends State<MyCalendar> {
                           /// 月日表示
                           Row(
                             mainAxisSize: MainAxisSize.max,
-                            children: calendars.map((calendar) {
+                            children: months.map((month) {
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   /// 月表示
                                   Container(
-                                    width: calendar.length * cellWidth,
+                                    width: month.length * cellWidth,
                                     height: 24,
                                     decoration: BoxDecoration(
                                       border: Border(
@@ -353,9 +365,9 @@ class _MyCalendarState extends State<MyCalendar> {
                                       children: [
                                         const SizedBox(width: 4),
                                         Text(
-                                          '${calendar.first.year}年${calendar.first.month}月',
+                                          '${month.first.year}年${month.first.month}月',
                                           style: const TextStyle(
-                                            color: Color.fromRGBO(0, 19, 80, 1),
+                                            color: defaultTextColor,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
@@ -366,7 +378,7 @@ class _MyCalendarState extends State<MyCalendar> {
                                   /// 日付
                                   Row(
                                     children: [
-                                      ...calendar.map(
+                                      ...month.map(
                                         (date) {
                                           return Row(
                                             children: [
@@ -379,7 +391,9 @@ class _MyCalendarState extends State<MyCalendar> {
                                                       border: Border(
                                                         top: const BorderSide(color: gray, width: .5),
                                                         bottom: const BorderSide(color: gray, width: .5),
-                                                        left: BorderSide(color: gray.withOpacity(.5), width: .5),
+                                                        left: date.day != 5
+                                                            ? BorderSide(color: gray.withOpacity(.5), width: .5)
+                                                            : BorderSide.none,
                                                       ),
                                                       color: Theme.of(context).scaffoldBackgroundColor,
                                                     ),
@@ -392,13 +406,13 @@ class _MyCalendarState extends State<MyCalendar> {
                                                         ),
                                                         const SizedBox(height: 4),
                                                         Text(
-                                                          date.weekday.toWeek(),
+                                                          date.weekday.toDayOfTheWeek(),
                                                           style: const TextStyle(fontSize: 10, color: gray),
                                                         ),
                                                       ],
                                                     ),
                                                   ),
-                                                  if (date.day == 1)
+                                                  if (date.day == 5)
                                                     SizedBox(
                                                       height: 40,
                                                       width: 0,
